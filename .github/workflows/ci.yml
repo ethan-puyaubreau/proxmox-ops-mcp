@@ -14,5 +14,5 @@ jobs:
         with:
           node-version: 20
       - run: npm install
-      - run: node --check index.mjs src/classifier.mjs src/pool.mjs src/parsers.mjs src/gjallarhorn.mjs src/pending.mjs src/routing.mjs src/tools/*.mjs
+      - run: for f in index.mjs src/classifier.mjs src/pool.mjs src/parsers.mjs src/gjallarhorn.mjs src/pending.mjs src/routing.mjs src/tools/*.mjs; do node --check "$f"; done
       - run: npm test
