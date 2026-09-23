@@ -167,10 +167,12 @@ server.tool(
 
 server.tool(
   'prometheus_query',
-  'Run a PromQL query against the configured Prometheus endpoint.',
+  'Run a PromQL query against the configured Prometheus endpoint. Pass start, end and step together for a range query.',
   {
     query: z.string().describe('PromQL query (e.g. "up", "node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100")'),
-    range: z.string().optional().describe('Range query params (e.g. "start=2024-01-01T00:00:00Z&end=2024-01-02T00:00:00Z&step=1h")'),
+    start: z.string().optional().describe('Range start: unix timestamp or RFC 3339 (e.g. "2026-01-01T00:00:00Z")'),
+    end: z.string().optional().describe('Range end: unix timestamp or RFC 3339 (e.g. "2026-01-02T00:00:00+02:00")'),
+    step: z.string().optional().describe('Range resolution: seconds or a Prometheus duration (e.g. "60", "5m", "1h")'),
   },
   prometheusQueryTool
 );

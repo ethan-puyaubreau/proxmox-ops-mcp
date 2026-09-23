@@ -70,7 +70,7 @@ Configure in your MCP client:
 | `service_restart` | 1/2 | Restart a systemd service or Docker container, with post-restart check |
 | `standalone_exec` | 1/2 | Shell command on the configured standalone server |
 | `refresh_routing` | 1 | Force refresh of the CTID-to-node routing map |
-| `prometheus_query` | 1 | PromQL query against the configured Prometheus endpoint |
+| `prometheus_query` | 1 | PromQL instant query, or range query with `start`, `end` and `step` |
 | `journalctl` | 1 | systemd journal logs from a node or CT |
 
 ## What is not included
