@@ -1,10 +1,11 @@
 // Approval queue for Tier-2 actions.
-// requestApproval(summary) -> Promise<{approved, reason}>
+// requestApproval(summary, { signal }) -> Promise<{approved, reason}>
 //   - Gjallarhorn not configured  -> { approved: false } (FAIL-SAFE)
 //   - Telegram approve/reject     -> per the button tap
 //   - No response within 5 min    -> { approved: false, reason: 'timeout' }
 //   - Text too long to display    -> { approved: false } without asking
 //   - Request not delivered       -> { approved: false } at once
+//   - signal aborted by client    -> { approved: false }, later taps ignored
 // Every decision is appended to an append-only local audit log.
 // createApprovalQueue() builds the same queue around any channel, for tests.
 
@@ -49,7 +50,7 @@ export function createApprovalQueue({ channel, audit, timeoutMs }) {
     });
   }
 
-  return function requestApproval(summary) {
+  return function requestApproval(summary, { signal } = {}) {
     if (!channel.configured()) {
       audit({ action: summary, decision: 'denied', via: 'fail-safe (Gjallarhorn not configured)' });
       return Promise.resolve({
@@ -61,14 +62,19 @@ export function createApprovalQueue({ channel, audit, timeoutMs }) {
       audit({ action: summary, decision: 'denied', via: 'fail-safe (action too long)' });
       return Promise.resolve({ approved: false, reason: 'action too long to display for approval' });
     }
+    if (signal?.aborted) {
+      audit({ action: summary, decision: 'cancelled', via: 'client' });
+      return Promise.resolve({ approved: false, reason: 'cancelled by client' });
+    }
     ensurePolling();
     const id = randomUUID();
     audit({ id, action: summary, decision: 'pending', via: 'gjallarhorn' });
     return new Promise((resolve) => {
-      // Only the first outcome counts: decision, timeout or failed delivery.
+      // Only the first outcome counts: decision, timeout, failed delivery or abort.
       const settle = (approved, reason, auditFields) => {
         if (!pending.delete(id)) return;
         clearTimeout(timer);
+        signal?.removeEventListener('abort', onAbort);
         audit({ id, action: summary, ...auditFields });
         resolve({ approved, reason });
       };
@@ -78,7 +84,9 @@ export function createApprovalQueue({ channel, audit, timeoutMs }) {
       );
       const undelivered = () =>
         settle(false, 'approval request could not be delivered', { decision: 'denied', via: 'delivery failed' });
+      const onAbort = () => settle(false, 'cancelled by client', { decision: 'cancelled', via: 'client' });
       pending.set(id, settle);
+      signal?.addEventListener('abort', onAbort);
       channel.send(id, summary).then((messageId) => { if (messageId == null) undelivered(); }, undelivered);
     });
   };

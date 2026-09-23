@@ -77,6 +77,23 @@ describe('approval queue', () => {
     assert.equal(result.approved, false);
     assert.match(result.reason, /could not be delivered/);
   });
+
+  it('cancels a pending request when the client aborts', async () => {
+    const { channel, entries, requestApproval } = setup();
+    const controller = new AbortController();
+    const result = requestApproval('node_exec [node-a] reboot', { signal: controller.signal });
+    controller.abort();
+    channel.onDecision(channel.sent[0].id, true);
+    assert.deepEqual(await result, { approved: false, reason: 'cancelled by client' });
+    assert.equal(entries.at(-1).decision, 'cancelled');
+  });
+
+  it('denies an already aborted request without contacting the channel', async () => {
+    const { channel, requestApproval } = setup();
+    const result = await requestApproval('node_exec [node-a] reboot', { signal: AbortSignal.abort() });
+    assert.equal(result.approved, false);
+    assert.equal(channel.sent.length, 0);
+  });
 });
 
 describe('describeAction', () => {

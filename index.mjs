@@ -35,7 +35,7 @@ function gated(toolName, handler) {
       } catch (_) {}
       return handler(args, extra);
     }
-    const { approved, reason: decision } = await requestApproval(action);
+    const { approved, reason: decision } = await requestApproval(action, { signal: extra?.signal });
     if (!approved) {
       return {
         content: [{
@@ -47,6 +47,8 @@ function gated(toolName, handler) {
         }],
       };
     }
+    // Nobody is waiting for the result any more, so do not act on the approval.
+    if (extra?.signal?.aborted) throw new Error('cancelled by client, action not run');
     return handler(args, extra);
   };
 }
