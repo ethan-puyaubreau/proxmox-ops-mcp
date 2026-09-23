@@ -24,15 +24,15 @@ async function tg(method, body) {
 
 // Send an approval request with two inline buttons (callback_data = approve:<id> / reject:<id>).
 export async function sendApprovalRequest(id, summary) {
-  const text =
-    'Tier-2 action pending approval\n\n```\n' + summary + '\n```\nID `' + id + '` · expires in 5 min';
+  // Plain text: a backtick or underscore in a command must not break delivery.
+  const text = 'Tier-2 action pending approval\n\n' + summary + '\n\nID ' + id + ' · expires in 5 min';
   const reply_markup = {
     inline_keyboard: [[
       { text: 'Approve', callback_data: 'approve:' + id },
       { text: 'Reject',  callback_data: 'reject:'  + id },
     ]],
   };
-  const res = await tg('sendMessage', { chat_id: CHAT_ID, text, parse_mode: 'Markdown', reply_markup });
+  const res = await tg('sendMessage', { chat_id: CHAT_ID, text, reply_markup });
   return res && res.ok ? res.result.message_id : null;
 }
 

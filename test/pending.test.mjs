@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert';
 import { describe, it } from 'node:test';
-import { createApprovalQueue } from '../src/pending.mjs';
+import { createApprovalQueue, describeAction } from '../src/pending.mjs';
 
 function setup({ configured = true, timeoutMs = 1000 } = {}) {
   const channel = {
@@ -52,5 +52,24 @@ describe('approval queue', () => {
     channel.onDecision('unknown-id', true);
     channel.onDecision(channel.sent[0].id, false);
     assert.equal((await result).approved, false);
+  });
+
+  it('denies an action too long to display without contacting the channel', async () => {
+    const { channel, requestApproval } = setup();
+    const text = describeAction('node_exec', { node: 'node-a', cmd: 'echo ' + 'a'.repeat(4000) });
+    const result = await requestApproval(text);
+    assert.equal(result.approved, false);
+    assert.match(result.reason, /too long/);
+    assert.equal(channel.sent.length, 0);
+  });
+});
+
+describe('describeAction', () => {
+  it('lists every argument in full', () => {
+    const cmd = 'apt-get install -y ' + Array.from({ length: 60 }, (_, i) => `package-${i}`).join(' ');
+    assert.equal(
+      describeAction('node_exec', { node: 'node-a', cmd, timeout: 30000 }),
+      `tool: node_exec\nnode: node-a\ncmd: ${cmd}\ntimeout: 30000`,
+    );
   });
 });

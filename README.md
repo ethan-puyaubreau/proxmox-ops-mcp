@@ -8,6 +8,8 @@ Every tool call goes through a classifier before execution. Tier-1 commands (rea
 
 The classifier is deny-by-default on arbitrary shell execution: each segment of a command must start with an allow-listed verb, and for multi-purpose binaries (`systemctl`, `docker`, `pct`, `zfs`, ...) the subcommand must also be on an allow-list. Write redirects, command substitution, and network egress (`curl`/`wget`) are always Tier 2. The goal: a prompt-injection attack requesting something destructive hits the out-of-band approval step and cannot self-approve, because it does not control the Telegram channel.
 
+The approval message shows the tool name and every argument in full, so the approver sees exactly what will run. An action too long to fit in one Telegram message is denied without asking.
+
 If Telegram credentials are not configured, Tier-2 actions are denied by default (fail-safe).
 
 ## Configuration

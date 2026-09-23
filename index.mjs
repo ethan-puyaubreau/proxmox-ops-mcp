@@ -7,7 +7,7 @@ import { warmPool } from './src/pool.mjs';
 import { buildCtMap, getCachedMap } from './src/routing.mjs';
 import { PVE_NODES, SENSITIVE_CTIDS } from './src/config.mjs';
 import { classify } from './src/classifier.mjs';
-import { requestApproval, audit } from './src/pending.mjs';
+import { requestApproval, audit, describeAction } from './src/pending.mjs';
 
 import { clusterStatus } from './src/tools/cluster_status.mjs';
 import { listCts } from './src/tools/list_cts.mjs';
@@ -28,24 +28,20 @@ import { journalctlTool } from './src/tools/journalctl.mjs';
 function gated(toolName, handler) {
   return async (args, extra) => {
     const { tier, reason } = classify(toolName, args, { sensitiveCtids: SENSITIVE_CTIDS });
+    const action = describeAction(toolName, args);
     if (tier === 1) {
       try {
-        audit({
-          tier: 1,
-          action: `${toolName} [${args.node ?? args.ctid ?? args.target ?? 'standalone'}] ${String(args.cmd ?? args.service ?? '').slice(0, 200)}`.trim(),
-          decision: 'auto',
-        });
+        audit({ tier: 1, action, decision: 'auto' });
       } catch (_) {}
       return handler(args, extra);
     }
-    const summary = `${toolName} [${args.node ?? args.ctid ?? args.target ?? 'standalone'}] ${args.cmd ?? args.service ?? ''}`.trim().slice(0, 300);
-    const { approved, reason: decision } = await requestApproval(summary);
+    const { approved, reason: decision } = await requestApproval(action);
     if (!approved) {
       return {
         content: [{
           type: 'text',
           text: JSON.stringify({
-            blocked: true, tier: 2, classifier_reason: reason, decision, action: summary,
+            blocked: true, tier: 2, classifier_reason: reason, decision, action,
             hint: 'Tier-2 action blocked — approve via Gjallarhorn (Telegram) then retry.',
           }, null, 2),
         }],
