@@ -6,7 +6,7 @@ An MCP server for operating a Proxmox cluster. Tools cover cluster status, conta
 
 Every tool call goes through a classifier before execution. Tier-1 commands (read, diagnose, benign repair) run immediately. Tier-2 commands (destructive, sensitive, or unrecognized) are queued and require out-of-band approval via a Telegram bot (Gjallarhorn) before anything executes.
 
-The classifier is deny-by-default on arbitrary shell execution: each segment of a command must start with an allow-listed verb, and for multi-purpose binaries (`systemctl`, `docker`, `pct`, `zfs`, ...) the subcommand must also be on an allow-list. Write redirects, command substitution, and network egress (`curl`/`wget`) are always Tier 2. The goal: a prompt-injection attack requesting something destructive hits the out-of-band approval step and cannot self-approve, because it does not control the Telegram channel.
+The classifier is deny-by-default on arbitrary shell execution: each segment of a command must start with an allow-listed verb, and for multi-purpose binaries (`systemctl`, `docker`, `pct`, `zfs`, ...) the subcommand, the first word after the verb that is not an option, must also be on an allow-list. Write redirects, command substitution, and network egress (`curl`/`wget`) are always Tier 2. The goal: a prompt-injection attack requesting something destructive hits the out-of-band approval step and cannot self-approve, because it does not control the Telegram channel.
 
 CTs listed in `sensitiveCtids` in `config.json` are always Tier 2, for every tool that targets a CT: `ct_exec`, `docker_ps`, `docker_logs`, `journalctl` and `service_restart`.
 

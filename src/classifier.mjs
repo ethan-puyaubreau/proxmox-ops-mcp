@@ -41,13 +41,16 @@ const SAFE_SUBCMD = {
   docker: new Set(['ps','logs','inspect','images','image','stats','top','version','info','port','diff','events','system','volume','network']),
   zfs:    new Set(['list','get','version']),
   zpool:  new Set(['status','list','get','iostat','version']),
-  ip:     new Set(['a','addr','route','link','neigh','rule','-4','-6','-o','-br','-s','-d']),
+  ip:     new Set(['a','addr','route','link','neigh','rule']),
   wg:     new Set(['show','showconf']),
   apt:    new Set(['list','show','policy','search','--version','-v']),
   dpkg:   new Set(['-l','-L','-s','--list','--status','-S','--search','--get-selections','-p']),
   bao:    new Set(['status','version']),
   mount:  new Set([]),
 };
+
+// Verbs whose actions are options, so their first argument is the subcommand.
+const OPTION_ACTION_VERBS = new Set(['dpkg']);
 
 // Patterns that are always Tier 2 (destructive / reconfiguration / sensitive target),
 // even when the head verb looks safe.
@@ -86,6 +89,17 @@ function stripBenignRedirects(cmd) {
     .replace(/\d*>>?\s*\/dev\/(null|stderr|stdout)/g, ' ')
     .replace(/\d*>&\d?-?/g, ' ')
     .replace(/&>\s*\/dev\/null/g, ' ');
+}
+
+// Return the subcommand (first non-option word) if it is not allowed, else undefined.
+function badSubcommand(verb, allowed, rest) {
+  if (OPTION_ACTION_VERBS.has(verb)) {
+    const a = rest[0];
+    return a === undefined || allowed.has(a) || allowed.has(a.replace(/^-+/, '')) ? undefined : a;
+  }
+  const a = rest.find(w => !w.startsWith('-'));
+  if (a !== undefined) return allowed.has(a) ? undefined : a;
+  return rest.find(w => !allowed.has(w));
 }
 
 // Split on ; | && || newline and return word lists per segment, stripping env/sudo prefixes.
@@ -138,12 +152,8 @@ export function classify(toolName, args = {}, { sensitiveCtids = new Set() } = {
       const verb = (words[0] || '').replace(/^.*\//, '');
       if (!SAFE_READ.has(verb)) return { tier: 2, reason: `non-allow-listed verb: ${verb || '(empty)'}` };
       const sub = SAFE_SUBCMD[verb];
-      if (sub && words[1] !== undefined) {
-        const a = words[1];
-        if (!sub.has(a) && !sub.has(a.replace(/^-+/, ''))) {
-          return { tier: 2, reason: `${verb} ${a}: subcommand not in allow-list` };
-        }
-      }
+      const bad = sub && badSubcommand(verb, sub, words.slice(1));
+      if (bad !== undefined) return { tier: 2, reason: `${verb} ${bad}: subcommand not in allow-list` };
     }
     return { tier: 1, reason: 'read/diagnostic command in allow-list' };
   }

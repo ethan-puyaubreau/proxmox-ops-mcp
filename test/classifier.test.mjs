@@ -164,3 +164,19 @@ describe('classify — secrets', () => {
     assert.equal(classify('ct_exec', { ctid: 101, cmd: 'printenv' }, opts).tier, 2);
   });
 });
+
+describe('classify — subcommand position', () => {
+  it('the subcommand is the first word that is not an option', () => {
+    assert.equal(classify('node_exec', { cmd: 'systemctl --no-pager status nginx' }, opts).tier, 1);
+    assert.equal(classify('node_exec', { cmd: 'systemctl --no-pager restart nginx' }, opts).tier, 2);
+    assert.equal(classify('node_exec', { cmd: 'ip -br a' }, opts).tier, 1);
+  });
+
+  it('dpkg actions are options and stay allowed', () => {
+    assert.equal(classify('node_exec', { cmd: 'dpkg -L nginx' }, opts).tier, 1);
+  });
+
+  it('a command made only of allow-listed options is tier 1', () => {
+    assert.equal(classify('node_exec', { cmd: 'apt --version' }, opts).tier, 1);
+  });
+});
