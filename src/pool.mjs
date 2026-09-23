@@ -39,8 +39,11 @@ export function exec(conn, cmd, { timeout = 30000 } = {}) {
       let stdout = '';
       let stderr = '';
       const timer = setTimeout(() => {
+        const timeoutErr = new Error(`Command timed out after ${timeout / 1000}s: ${cmd.slice(0, 80)}`);
+        timeoutErr.code = 'ECMDTIMEOUT';
+        try { stream.signal('KILL'); } catch (_) {}
         try { stream.close(); } catch (_) {}
-        reject(new Error(`Command timed out after ${timeout / 1000}s: ${cmd.slice(0, 80)}`));
+        reject(timeoutErr);
       }, timeout);
       stream.on('data', d => { stdout += d.toString(); });
       stream.stderr.on('data', d => { stderr += d.toString(); });
@@ -52,11 +55,17 @@ export function exec(conn, cmd, { timeout = 30000 } = {}) {
   });
 }
 
+// A timed-out command may still be running, so only retry one that never started.
+export function isRetryable(err) {
+  return err?.code !== 'ECMDTIMEOUT';
+}
+
 export async function nodeExec(nodeName, cmd, opts = {}) {
   const conn = await getConn(nodeName);
   try {
     return await exec(conn, cmd, opts);
   } catch (err) {
+    if (!isRetryable(err)) throw err;
     const entry = pool.get(nodeName);
     if (entry) entry.healthy = false;
     const freshConn = await getConn(nodeName);
