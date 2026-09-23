@@ -7,7 +7,10 @@ const opts = { sensitiveCtids: new Set([VAULT_CTID]) };
 
 describe('classify — read-only tools', () => {
   it('read-only tools are always tier 1', () => {
-    for (const tool of ['cluster_status', 'list_cts', 'node_resources', 'docker_ps', 'docker_logs', 'refresh_routing']) {
+    for (const tool of [
+      'cluster_status', 'list_cts', 'node_resources', 'docker_ps', 'docker_logs', 'refresh_routing',
+      'journalctl', 'prometheus_query',
+    ]) {
       assert.equal(classify(tool, {}, opts).tier, 1, tool);
     }
   });

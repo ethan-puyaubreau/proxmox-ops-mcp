@@ -174,7 +174,7 @@ server.tool(
     end: z.string().optional().describe('Range end: unix timestamp or RFC 3339 (e.g. "2026-01-02T00:00:00+02:00")'),
     step: z.string().optional().describe('Range resolution: seconds or a Prometheus duration (e.g. "60", "5m", "1h")'),
   },
-  prometheusQueryTool
+  gated('prometheus_query', prometheusQueryTool)
 );
 
 server.tool(
@@ -185,7 +185,7 @@ server.tool(
     unit: z.string().describe('systemd unit name (e.g. "docker", "nginx")'),
     lines: z.number().int().min(1).max(10000).optional().default(50).describe('Number of lines to return (default 50)'),
   },
-  journalctlTool
+  gated('journalctl', journalctlTool)
 );
 
 // ─── Startup ──────────────────────────────────────────────────────────────────
