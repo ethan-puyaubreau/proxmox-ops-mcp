@@ -202,3 +202,31 @@ describe('classify — *ctl helpers and hostname', () => {
     }
   });
 });
+
+describe('classify — state changes through options', () => {
+  it('state-changing options are tier 2', () => {
+    for (const cmd of [
+      'journalctl --vacuum-size=100M', 'journalctl --vacuum-time=2d', 'journalctl --vacuum-files=5',
+      'journalctl --rotate', 'journalctl --flush', 'journalctl --relinquish-var', 'journalctl --setup-keys',
+      'dmesg -c', 'dmesg -C', 'dmesg -D', 'dmesg -E', 'dmesg -n 1', 'dmesg --clear', 'dmesg --read-clear',
+      'dmesg --console-off',
+      'date -s 2026-01-01', 'date --set=2026-01-01', 'date 010112002026',
+      'sort -o out.txt in.txt', 'sort --output=out.txt in.txt',
+      'ss -K dst 192.0.2.1', 'ss --kill dst 192.0.2.1',
+      'arp -s 192.0.2.1 00:00:5e:00:53:01', 'arp -d 192.0.2.1', 'arp -f ethers',
+      'arp --set 192.0.2.1 00:00:5e:00:53:01', 'arp --delete 192.0.2.1', 'arp --file ethers',
+      'uniq in.txt out.txt', 'xxd in.bin out.hex',
+    ]) {
+      assert.equal(classify('node_exec', { cmd }, opts).tier, 2, cmd);
+    }
+  });
+
+  it('read forms of the same tools stay tier 1', () => {
+    for (const cmd of [
+      'journalctl -u nginx -n 50', 'dmesg -T', 'date -u', 'date +%s', 'date -d 2026-01-01',
+      'sort -n', 'ss -tlnp', 'arp -n', 'uniq -c', 'uniq -c in.txt', 'xxd somefile',
+    ]) {
+      assert.equal(classify('node_exec', { cmd }, opts).tier, 1, cmd);
+    }
+  });
+});

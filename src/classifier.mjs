@@ -57,6 +57,9 @@ const SAFE_SUBCMD = {
 // Verbs whose actions are options, so their first argument is the subcommand.
 const OPTION_ACTION_VERBS = new Set(['dpkg']);
 
+// Verbs that write to a second operand, so they may take at most one.
+const SINGLE_OPERAND_VERBS = new Set(['uniq', 'xxd']);
+
 // Patterns that are always Tier 2 (destructive / reconfiguration / sensitive target),
 // even when the head verb looks safe.
 const DANGER = [
@@ -85,6 +88,12 @@ const DANGER = [
   /\/etc\/g?shadow\b|\bgetent\s+(shadow|gshadow)\b/i,
   /\/proc\/[^/\s]*\/environ/,
   /\bfind\b[^|;&]*\s-(delete|exec|execdir|ok|okdir|fprintf?|fls)\b/,
+  /\bjournalctl\b[^|;&]*\s--(vacuum-size|vacuum-time|vacuum-files|rotate|flush|relinquish-var|setup-keys)\b/,
+  /\bdmesg\b[^|;&]*\s(-[A-Za-z]*[cCDEn]|--(clear|read-clear|console-[\w-]+))/,
+  /\bdate\b[^|;&]*\s(-[uR]*s|--set\b)|\bdate\s+(-\S+\s+)*\d+(\.\d+)?(\s|$)/,
+  /\bsort\b[^|;&]*\s(-[A-Za-z]*o|--output\b)/,
+  /\bss\b[^|;&]*\s(-[A-Za-z]*K|--kill\b)/,
+  /\barp\b[^|;&]*\s(-[A-Za-z]*[sdf]|--(set|delete|file)\b)/,
   /\b(system|popen|execl|execv|execve|execlp|execvp|eval|spawn)\s*\(/,
 ];
 
@@ -156,6 +165,9 @@ export function classify(toolName, args = {}, { sensitiveCtids = new Set() } = {
     for (const words of segments(clean)) {
       const verb = (words[0] || '').replace(/^.*\//, '');
       if (!SAFE_READ.has(verb)) return { tier: 2, reason: `non-allow-listed verb: ${verb || '(empty)'}` };
+      if (SINGLE_OPERAND_VERBS.has(verb) && words.slice(1).filter(w => !w.startsWith('-')).length > 1) {
+        return { tier: 2, reason: `${verb}: a second operand is an output file` };
+      }
       const sub = SAFE_SUBCMD[verb];
       const bad = sub && badSubcommand(verb, sub, words.slice(1));
       if (bad !== undefined) return { tier: 2, reason: `${verb} ${bad}: subcommand not in allow-list` };
