@@ -21,6 +21,8 @@ cp .env.example .env
 
 Edit `config.json` with your node hostnames, SSH key paths, and host key fingerprints. Edit `.env` with your Telegram bot token and chat ID.
 
+In a private chat with the bot, `TELEGRAM_CHAT_ID` is your user ID and `TELEGRAM_APPROVER_ID` can stay empty. In a group chat, set `TELEGRAM_CHAT_ID` to the group ID and `TELEGRAM_APPROVER_ID` to the user ID of the person allowed to approve. A button press from anyone else, or from another chat, is refused.
+
 `PROXMOX_MCP_CONFIG` environment variable overrides the default config path (`./config.json`).
 
 ### Host key pinning

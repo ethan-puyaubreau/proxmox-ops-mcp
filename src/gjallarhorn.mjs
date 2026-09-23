@@ -1,5 +1,5 @@
 // Out-of-band approval channel via Telegram.
-// Config via env (gitignored): TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID.
+// Config via env (gitignored): TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_APPROVER_ID.
 // If unconfigured, gjallarhornConfigured() returns false and Tier-2 actions are denied
 // by default (fail-safe — see pending.mjs).
 // Security model: approval comes from your phone (a separate channel).
@@ -7,6 +7,8 @@
 
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
+// In a private chat the chat id is the user id, hence the default.
+const APPROVER_ID = process.env.TELEGRAM_APPROVER_ID || CHAT_ID;
 const api = (method) => `https://api.telegram.org/bot${TOKEN}/${method}`;
 
 export function gjallarhornConfigured() {
@@ -38,6 +40,11 @@ export async function sendApprovalRequest(id, summary) {
   return null;
 }
 
+// A decision counts only from the approver, in the configured chat.
+export function isAuthorized(cq, { chatId, approverId }) {
+  return String(cq.from?.id) === approverId && String(cq.message?.chat?.id) === chatId;
+}
+
 // Long-poll getUpdates (callback_query only). Calls onDecision(id, approved) on each response.
 let offset = 0;
 let polling = false;
@@ -52,8 +59,7 @@ export function startPolling(onDecision) {
           offset = u.update_id + 1;
           const cq = u.callback_query;
           if (!cq || !cq.data) continue;
-          // Only accept responses from the configured owner. Prevents forged approvals.
-          if (String(cq.from && cq.from.id) !== String(CHAT_ID)) {
+          if (!isAuthorized(cq, { chatId: CHAT_ID, approverId: APPROVER_ID })) {
             try { await tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Unauthorized' }); } catch (_) {}
             continue;
           }
