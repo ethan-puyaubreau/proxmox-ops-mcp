@@ -38,7 +38,7 @@ const SAFE_SUBCMD = {
   pvesm:  new Set(['status','list','scan','apiinfo']),
   pvecm:  new Set(['status','nodes']),
   pvesh:  new Set(['get','ls','usage']),
-  docker: new Set(['ps','logs','inspect','images','image','stats','top','version','info','port','diff','events','system','volume','network']),
+  docker: new Set(['ps','logs','inspect','images','image','stats','top','version','info','port','diff','events','system','volume','network','container','builder']),
   zfs:    new Set(['list','get','version']),
   zpool:  new Set(['status','list','get','iostat','version']),
   ip:     new Set(['a','addr','address','r','route','l','link','n','neigh','neighbor','neighbour','rule','ru','maddr','m']),
