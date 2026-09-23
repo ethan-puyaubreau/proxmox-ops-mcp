@@ -8,6 +8,8 @@ Every tool call goes through a classifier before execution. Tier-1 commands (rea
 
 The classifier is deny-by-default on arbitrary shell execution: each segment of a command must start with an allow-listed verb, and for multi-purpose binaries (`systemctl`, `docker`, `pct`, `zfs`, ...) the subcommand must also be on an allow-list. Write redirects, command substitution, and network egress (`curl`/`wget`) are always Tier 2. The goal: a prompt-injection attack requesting something destructive hits the out-of-band approval step and cannot self-approve, because it does not control the Telegram channel.
 
+CTs listed in `sensitiveCtids` in `config.json` are always Tier 2, for every tool that targets a CT: `ct_exec`, `docker_ps`, `docker_logs`, `journalctl` and `service_restart`.
+
 The approval message shows the tool name and every argument in full, so the approver sees exactly what will run. An action too long to fit in one Telegram message is denied without asking. If the approval request cannot be delivered, the action is denied at once instead of waiting for the timeout. If the MCP client cancels the tool call, the pending request is dropped and a later approval does not run the action.
 
 If Telegram credentials are not configured, Tier-2 actions are denied by default (fail-safe).

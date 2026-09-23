@@ -114,6 +114,22 @@ describe('classify — sensitive CT', () => {
   it('ct_exec on non-sensitive CTs follows normal rules', () => {
     assert.equal(classify('ct_exec', { ctid: 101, cmd: 'ps aux' }, opts).tier, 1);
   });
+
+  it('every tool that targets a sensitive CT is tier 2', () => {
+    assert.equal(classify('docker_ps', { ctid: VAULT_CTID }, opts).tier, 2);
+    assert.equal(classify('docker_logs', { ctid: VAULT_CTID, container: 'app' }, opts).tier, 2);
+    assert.equal(classify('journalctl', { target: String(VAULT_CTID) }, opts).tier, 2);
+    assert.equal(classify('service_restart', { target: String(VAULT_CTID), service: 'nginx' }, opts).tier, 2);
+  });
+
+  it('the same tools on other CTs or nodes follow normal rules', () => {
+    assert.equal(classify('docker_ps', { ctid: 101 }, opts).tier, 1);
+    assert.equal(classify('docker_logs', { ctid: 101, container: 'app' }, opts).tier, 1);
+    assert.equal(classify('journalctl', { target: '101' }, opts).tier, 1);
+    assert.equal(classify('service_restart', { target: '101', service: 'nginx' }, opts).tier, 1);
+    assert.equal(classify('journalctl', { target: 'node-a' }, opts).tier, 1);
+    assert.equal(classify('service_restart', { target: 'node-a', service: 'nginx' }, opts).tier, 1);
+  });
 });
 
 describe('classify — service_restart', () => {

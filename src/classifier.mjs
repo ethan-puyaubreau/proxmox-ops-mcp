@@ -102,6 +102,12 @@ function segments(cmd) {
 // classify(toolName, args, options) -> { tier: 1 | 2, reason: string }
 // options.sensitiveCtids: Set<number> of CT IDs that are always Tier 2 (e.g. vault containers).
 export function classify(toolName, args = {}, { sensitiveCtids = new Set() } = {}) {
+  // 0. Vault-class CT: always Tier 2, whatever the tool
+  const ctid = args.ctid ?? (/^\d+$/.test(String(args.target ?? '')) ? args.target : undefined);
+  if (ctid !== undefined && sensitiveCtids.has(Number(ctid))) {
+    return { tier: 2, reason: `sensitive CT (${ctid})` };
+  }
+
   // 1. Read-only tools
   if (READONLY_TOOLS.has(toolName)) return { tier: 1, reason: 'read-only tool' };
 
@@ -116,11 +122,6 @@ export function classify(toolName, args = {}, { sensitiveCtids = new Set() } = {
   if (EXEC_TOOLS.has(toolName)) {
     const cmd = String(args.cmd || '');
     if (!cmd.trim()) return { tier: 2, reason: 'empty command' };
-
-    // Vault-class CT: always Tier 2
-    if (toolName === 'ct_exec' && sensitiveCtids.has(Number(args.ctid))) {
-      return { tier: 2, reason: `sensitive CT (${args.ctid})` };
-    }
 
     const clean = stripBenignRedirects(cmd);
 
