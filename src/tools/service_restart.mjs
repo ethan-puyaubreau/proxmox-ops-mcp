@@ -1,6 +1,7 @@
 import { nodeExec } from '../pool.mjs';
 import { resolveNode } from '../routing.mjs';
 import { PVE_NODES } from '../config.mjs';
+import { assertName, pctExec } from '../shell.mjs';
 
 async function runOn(target, cmd, timeout = 30000) {
   if (PVE_NODES.includes(target)) {
@@ -9,8 +10,7 @@ async function runOn(target, cmd, timeout = 30000) {
   const ctid = parseInt(target);
   if (isNaN(ctid)) throw new Error(`Invalid target: ${target}. Use a node name or CT ID.`);
   const node = await resolveNode(ctid);
-  const escaped = cmd.replace(/'/g, `'\\''`);
-  return nodeExec(node, `pct exec ${ctid} -- bash -c '${escaped}'`, { timeout });
+  return nodeExec(node, pctExec(ctid, cmd), { timeout });
 }
 
 async function detectServiceType(target, service) {
@@ -27,8 +27,8 @@ async function detectServiceType(target, service) {
 
 export async function serviceRestartTool({ target, service, type = 'auto' }) {
   // Validate target/service (anti-injection — interpolated into systemctl/docker/pct).
-  if (!/^[A-Za-z0-9_.:@-]+$/.test(String(target))) throw new Error(`invalid target: "${target}"`);
-  if (!/^[A-Za-z0-9_.:@-]+$/.test(String(service))) throw new Error(`invalid service: "${service}"`);
+  assertName('target', target);
+  assertName('service', service);
   const resolvedType = type === 'auto' ? await detectServiceType(target, service) : type;
 
   if (!resolvedType) {

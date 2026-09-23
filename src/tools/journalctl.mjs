@@ -1,6 +1,7 @@
 import { nodeExec } from '../pool.mjs';
 import { resolveNode } from '../routing.mjs';
 import { NODES } from '../config.mjs';
+import { pctExec } from '../shell.mjs';
 
 // Read systemd journal logs from a PVE node or a CT inside one.
 // target: node name OR CTID as number/string
@@ -19,8 +20,7 @@ export async function journalctlTool({ target, unit, lines = 50 }) {
   } else {
     node = await resolveNode(ctid);
     const inner = `journalctl -u '${unit}' --no-pager -n ${lines} 2>&1 || journalctl --no-pager -n ${lines} 2>&1`;
-    const escaped = inner.replace(/'/g, `'\\''`);
-    cmd = `pct exec ${ctid} -- bash -c '${escaped}'`;
+    cmd = pctExec(ctid, inner);
   }
 
   const result = await nodeExec(node, cmd, { timeout: 30000 });
