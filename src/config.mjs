@@ -28,6 +28,7 @@ export const NODES = Object.fromEntries(
       privateKey: resolveKey(cfg.keyPath),
       readyTimeout: 15000,
       fingerprints: cfg.fingerprints ?? [],
+      insecureAcceptAnyHostKey: cfg.insecureAcceptAnyHostKey === true,
     },
   ])
 );
@@ -39,6 +40,7 @@ export const STANDALONE = raw.standalone
       privateKey: resolveKey(raw.standalone.keyPath),
       readyTimeout: 15000,
       fingerprints: raw.standalone.fingerprints ?? [],
+      insecureAcceptAnyHostKey: raw.standalone.insecureAcceptAnyHostKey === true,
     }
   : null;
 
@@ -47,15 +49,36 @@ export const PROMETHEUS_NODE = raw.prometheus?.node ?? Object.keys(NODES)[0] ?? 
 export const SENSITIVE_CTIDS = new Set((raw.sensitiveCtids ?? []).map(Number));
 export const PVE_NODES = Object.keys(NODES);
 
-// Returns a host-key verifier for the given host.
-// If fingerprints are configured, require a match (anti-MITM).
-// Empty fingerprints array = accept any key (standard ssh-like behavior).
-export function makeHostVerifier(host) {
-  const all = [...Object.values(NODES), ...(STANDALONE ? [STANDALONE] : [])];
-  const fingerprints = all.find(c => c.host === host)?.fingerprints ?? [];
-  if (!fingerprints.length) return () => true;
-  return (key) => {
-    const fp = 'SHA256:' + crypto.createHash('sha256').update(key).digest('base64').replace(/=+$/, '');
-    return fingerprints.includes(fp);
+const warned = new Set();
+
+// Pinned fingerprints must match; an unpinned host is refused unless the
+// insecure opt-out is set.
+export function hostVerifier({ fingerprints = [], insecureAcceptAnyHostKey = false }, label) {
+  if (fingerprints.length) {
+    return (key) => {
+      const fp = 'SHA256:' + crypto.createHash('sha256').update(key).digest('base64').replace(/=+$/, '');
+      return fingerprints.includes(fp);
+    };
+  }
+  if (insecureAcceptAnyHostKey) {
+    return () => {
+      if (!warned.has(label)) {
+        warned.add(label);
+        process.stderr.write(`[proxmox-mcp] ${label}: accepting any host key (insecureAcceptAnyHostKey)
+`);
+      }
+      return true;
+    };
+  }
+  return () => {
+    process.stderr.write(`[proxmox-mcp] ${label}: no host key fingerprint configured; refusing to connect (add fingerprints or set insecureAcceptAnyHostKey)
+`);
+    return false;
   };
+}
+
+export function makeHostVerifier(host) {
+  const hosts = [...Object.entries(NODES), ...(STANDALONE ? [['standalone', STANDALONE]] : [])];
+  const [label, cfg] = hosts.find(([, c]) => c.host === host) ?? [host, {}];
+  return hostVerifier(cfg, label);
 }

@@ -4,26 +4,30 @@
       "host": "192.0.2.10",
       "username": "root",
       "keyPath": "~/.ssh/id_ed25519",
-      "fingerprints": []
+      "fingerprints": [],
+      "insecureAcceptAnyHostKey": false
     },
     "node-b": {
       "host": "192.0.2.11",
       "username": "root",
       "keyPath": "~/.ssh/id_ed25519",
-      "fingerprints": []
+      "fingerprints": [],
+      "insecureAcceptAnyHostKey": false
     },
     "node-c": {
       "host": "192.0.2.12",
       "username": "root",
       "keyPath": "~/.ssh/id_ed25519",
-      "fingerprints": []
+      "fingerprints": [],
+      "insecureAcceptAnyHostKey": false
     }
   },
   "standalone": {
     "host": "192.0.2.20",
     "username": "admin",
     "keyPath": "~/.ssh/id_ed25519",
-    "fingerprints": []
+    "fingerprints": [],
+    "insecureAcceptAnyHostKey": false
   },
   "prometheus": {
     "url": "http://192.0.2.30:9090",

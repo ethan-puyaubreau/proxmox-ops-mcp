@@ -19,19 +19,19 @@ cp config.example.json config.json
 cp .env.example .env
 ```
 
-Edit `config.json` with your node hostnames, SSH key paths, and optional host fingerprints. Edit `.env` with your Telegram bot token and chat ID.
+Edit `config.json` with your node hostnames, SSH key paths, and host key fingerprints. Edit `.env` with your Telegram bot token and chat ID.
 
 `PROXMOX_MCP_CONFIG` environment variable overrides the default config path (`./config.json`).
 
 ### Host key pinning
 
-Populate `fingerprints` in `config.json` for each node to enable host key verification. Collect fingerprints with:
+Every host in `config.json` needs its `fingerprints`. A host with no fingerprint is refused. Collect fingerprints with:
 
 ```
 ssh-keyscan -t ed25519,rsa <host> | ssh-keygen -lf -
 ```
 
-Leave `fingerprints: []` to skip pinning (accepts any key, standard ssh-like behavior).
+For a throwaway lab, `"insecureAcceptAnyHostKey": true` on a host with no fingerprints accepts any key and logs a warning. It defaults to `false`.
 
 ## Running
 
