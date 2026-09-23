@@ -123,7 +123,7 @@ server.tool(
   {
     ctid: z.number().int().describe('CT ID running Docker'),
     container: z.string().describe('Container name or ID'),
-    lines: z.number().optional().default(50).describe('Number of lines to return (default 50)'),
+    lines: z.number().int().min(1).max(10000).optional().default(50).describe('Number of lines to return (default 50)'),
   },
   dockerLogsTool
 );
@@ -181,7 +181,7 @@ server.tool(
   {
     target: z.string().describe('Node name or CTID string (e.g. "134")'),
     unit: z.string().describe('systemd unit name (e.g. "docker", "nginx")'),
-    lines: z.number().optional().default(50).describe('Number of lines to return (default 50)'),
+    lines: z.number().int().min(1).max(10000).optional().default(50).describe('Number of lines to return (default 50)'),
   },
   journalctlTool
 );
