@@ -221,7 +221,8 @@ describe('classify — state changes through options', () => {
       'ss -K dst 192.0.2.1', 'ss --kill dst 192.0.2.1',
       'arp -s 192.0.2.1 00:00:5e:00:53:01', 'arp -d 192.0.2.1', 'arp -f ethers',
       'arp --set 192.0.2.1 00:00:5e:00:53:01', 'arp --delete 192.0.2.1', 'arp --file ethers',
-      'uniq in.txt out.txt', 'xxd in.bin out.hex',
+      'uniq in.txt out.txt', 'xxd in.bin out.hex', 'uniq - out.txt', 'xxd - out.hex',
+      'uniq -- in.txt out.txt',
     ]) {
       assert.equal(classify('node_exec', { cmd }, opts).tier, 2, cmd);
     }

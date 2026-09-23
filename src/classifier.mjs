@@ -85,8 +85,9 @@ const SINGLE_OPERAND_VERBS = {
 function countOperands(words, valueOptions) {
   let n = 0;
   for (let i = 0; i < words.length; i++) {
+    if (words[i] === '--') { n += words.length - i - 1; break; }
     if (valueOptions.has(words[i])) i++;
-    else if (!words[i].startsWith('-')) n++;
+    else if (words[i] === '-' || !words[i].startsWith('-')) n++;
   }
   return n;
 }
