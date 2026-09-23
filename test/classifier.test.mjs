@@ -152,3 +152,15 @@ describe('classify — deny-by-default', () => {
     assert.equal(classify('', {}, opts).tier, 2);
   });
 });
+
+describe('classify — secrets', () => {
+  it('bao status is tier 1', () => {
+    assert.equal(classify('node_exec', { cmd: 'bao status' }, opts).tier, 1);
+  });
+
+  it('secret reads and environment dumps are tier 2', () => {
+    assert.equal(classify('node_exec', { cmd: 'bao kv get secret/app' }, opts).tier, 2);
+    assert.equal(classify('node_exec', { cmd: 'bao read sys/health' }, opts).tier, 2);
+    assert.equal(classify('ct_exec', { ctid: 101, cmd: 'printenv' }, opts).tier, 2);
+  });
+});

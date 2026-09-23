@@ -22,7 +22,7 @@ const SENSITIVE_SERVICES = /pve-cluster|pvedaemon|pveproxy|corosync|^ssh$|ssh\.s
 const SAFE_READ = new Set([
   'cat','ls','ll','grep','egrep','fgrep','zgrep','tail','head','wc','sort','uniq','awk','cut','tr','column','nl','tac',
   'find','stat','file','readlink','realpath','basename','dirname','tree','diff','cmp','strings',
-  'df','du','free','ps','pgrep','uptime','w','who','whoami','id','hostname','hostnamectl','uname','date','printenv','locale','lscpu','lsmem','lsblk','blkid','findmnt',
+  'df','du','free','ps','pgrep','uptime','w','who','whoami','id','hostname','hostnamectl','uname','date','locale','lscpu','lsmem','lsblk','blkid','findmnt',
   'echo','printf','true','false','test','which','type',
   'systemctl','journalctl','dmesg','loginctl','timedatectl',
   'ip','ss','netstat','ping','dig','nslookup','host','getent','arp',
@@ -45,7 +45,7 @@ const SAFE_SUBCMD = {
   wg:     new Set(['show','showconf']),
   apt:    new Set(['list','show','policy','search','--version','-v']),
   dpkg:   new Set(['-l','-L','-s','--list','--status','-S','--search','--get-selections','-p']),
-  bao:    new Set(['status','version','kv','read','list','token','secrets','policy','auth']),
+  bao:    new Set(['status','version']),
   mount:  new Set([]),
 };
 
