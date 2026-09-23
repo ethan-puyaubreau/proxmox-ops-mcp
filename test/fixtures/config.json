@@ -1,0 +1,27 @@
+{
+  "nodes": {
+    "node-a": {
+      "host": "192.0.2.10",
+      "username": "root",
+      "keyPath": "test/fixtures/not-a-key",
+      "fingerprints": []
+    },
+    "node-b": {
+      "host": "192.0.2.11",
+      "username": "root",
+      "keyPath": "test/fixtures/not-a-key",
+      "fingerprints": []
+    }
+  },
+  "standalone": {
+    "host": "192.0.2.20",
+    "username": "admin",
+    "keyPath": "test/fixtures/not-a-key",
+    "fingerprints": []
+  },
+  "prometheus": {
+    "url": "http://192.0.2.30:9090",
+    "node": "node-a"
+  },
+  "sensitiveCtids": [110]
+}
