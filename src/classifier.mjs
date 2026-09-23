@@ -41,7 +41,7 @@ const SAFE_SUBCMD = {
   docker: new Set(['ps','logs','inspect','images','image','stats','top','version','info','port','diff','events','system','volume','network']),
   zfs:    new Set(['list','get','version']),
   zpool:  new Set(['status','list','get','iostat','version']),
-  ip:     new Set(['a','addr','route','link','neigh','rule']),
+  ip:     new Set(['a','addr','address','r','route','l','link','n','neigh','neighbor','neighbour','rule','ru','maddr','m']),
   wg:     new Set(['show','showconf']),
   apt:    new Set(['list','show','policy','search','--version','-v']),
   dpkg:   new Set(['-l','-L','-s','--list','--status','-S','--search','--get-selections','-p']),
@@ -56,6 +56,18 @@ const SAFE_SUBCMD = {
 
 // Verbs whose actions are options, so their first argument is the subcommand.
 const OPTION_ACTION_VERBS = new Set(['dpkg']);
+
+// For these objects, the action (next non-option word), if given, must be a read.
+const SAFE_ACTION = {
+  docker: {
+    objects: new Set(['system','image','volume','network','container','builder']),
+    actions: new Set(['ls','list','inspect','df','info','events','history','top','logs','port','stats','diff']),
+  },
+  ip: {
+    objects: SAFE_SUBCMD.ip,
+    actions: new Set(['show','sh','list','ls','lst','get']),
+  },
+};
 
 // Verbs that write to a second operand, so they may take at most one.
 const SINGLE_OPERAND_VERBS = new Set(['uniq', 'xxd']);
@@ -72,7 +84,7 @@ const DANGER = [
   /\bsystemctl\s+(start|stop|restart|reload|disable|enable|mask|unmask|kill|isolate|reboot|poweroff|halt|edit|set-default)\b/,
   /\bdocker\s+(exec|run|rm|rmi|stop|start|restart|kill|create|build|push|pull|compose|cp|commit|prune|update)\b/,
   /\bdocker\s+(system|image|volume|network|container|builder)\s+prune\b/,
-  /\biptables\b|\bip6tables\b|\bnft\b|\bnftables\b|\bufw\b|\bip\s+(route|addr|link)\s+(add|del|change|flush|set)\b/,
+  /\biptables\b|\bip6tables\b|\bnft\b|\bnftables\b|\bufw\b/,
   /\bsed\s+-i|\bperl\s+-i|\btee\b|\btruncate\b|\binstall\b\s+-/,
   /\|\s*(sh|bash|zsh)\b|\b(curl|wget|fetch)\b/,
   /\b(kill|pkill|killall)\b/,
@@ -171,6 +183,11 @@ export function classify(toolName, args = {}, { sensitiveCtids = new Set() } = {
       const sub = SAFE_SUBCMD[verb];
       const bad = sub && badSubcommand(verb, sub, words.slice(1));
       if (bad !== undefined) return { tier: 2, reason: `${verb} ${bad}: subcommand not in allow-list` };
+      const act = SAFE_ACTION[verb];
+      const [obj, action] = words.slice(1).filter(w => !w.startsWith('-'));
+      if (act && act.objects.has(obj) && action !== undefined && !act.actions.has(action)) {
+        return { tier: 2, reason: `${verb} ${obj} ${action}: action not in allow-list` };
+      }
     }
     return { tier: 1, reason: 'read/diagnostic command in allow-list' };
   }
@@ -179,4 +196,4 @@ export function classify(toolName, args = {}, { sensitiveCtids = new Set() } = {
   return { tier: 2, reason: 'unrecognized tool (deny-by-default)' };
 }
 
-export const CLASSIFIER_VERSION = '1.2.0';
+export const CLASSIFIER_VERSION = '1.3.0';

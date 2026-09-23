@@ -230,3 +230,24 @@ describe('classify — state changes through options', () => {
     }
   });
 });
+
+describe('classify — docker objects and ip', () => {
+  it('read actions are tier 1', () => {
+    for (const cmd of [
+      'docker network ls', 'docker volume inspect data', 'docker image ls', 'docker system df',
+      'ip route get 192.0.2.1', 'ip addr show dev eth0', 'ip a', 'ip -4 route',
+    ]) {
+      assert.equal(classify('ct_exec', { ctid: 101, cmd }, opts).tier, 1, cmd);
+    }
+  });
+
+  it('other actions are tier 2', () => {
+    for (const cmd of [
+      'docker network create lab', 'docker image push app',
+      'ip -4 route add 192.0.2.0/24 via 192.0.2.1', 'ip r a 192.0.2.0/24 via 192.0.2.1',
+      'ip link set eth0 down',
+    ]) {
+      assert.equal(classify('ct_exec', { ctid: 101, cmd }, opts).tier, 2, cmd);
+    }
+  });
+});
