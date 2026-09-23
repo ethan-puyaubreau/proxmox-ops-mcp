@@ -4,6 +4,7 @@
 //   - Telegram approve/reject     -> per the button tap
 //   - No response within 5 min    -> { approved: false, reason: 'timeout' }
 //   - Text too long to display    -> { approved: false } without asking
+//   - Request not delivered       -> { approved: false } at once
 // Every decision is appended to an append-only local audit log.
 // createApprovalQueue() builds the same queue around any channel, for tests.
 
@@ -34,19 +35,17 @@ export function describeAction(toolName, args) {
 
 // channel: { configured(), send(id, text) -> Promise<messageId|null>, startPolling(onDecision) }
 export function createApprovalQueue({ channel, audit, timeoutMs }) {
-  const pending = new Map(); // id -> { decide, timer, summary }
+  const pending = new Map(); // id -> settle(approved, reason, auditFields)
   let started = false;
 
   function ensurePolling() {
     if (started) return;
     started = true;
     channel.startPolling((id, approved) => {
-      const p = pending.get(id);
-      if (!p) return;
-      clearTimeout(p.timer);
-      pending.delete(id);
-      audit({ id, action: p.summary, decision: approved ? 'approved' : 'rejected', via: 'gjallarhorn' });
-      p.decide(approved, approved ? 'approved via Gjallarhorn' : 'rejected via Gjallarhorn');
+      const settle = pending.get(id);
+      if (!settle) return;
+      const decision = approved ? 'approved' : 'rejected';
+      settle(approved, `${decision} via Gjallarhorn`, { decision, via: 'gjallarhorn' });
     });
   }
 
@@ -66,17 +65,21 @@ export function createApprovalQueue({ channel, audit, timeoutMs }) {
     const id = randomUUID();
     audit({ id, action: summary, decision: 'pending', via: 'gjallarhorn' });
     return new Promise((resolve) => {
-      const timer = setTimeout(() => {
-        pending.delete(id);
-        audit({ id, action: summary, decision: 'timeout' });
-        resolve({ approved: false, reason: `timeout (${timeoutMs / 60000} min) — no response on Gjallarhorn` });
-      }, timeoutMs);
-      pending.set(id, {
-        summary,
-        timer,
-        decide: (approved, reason) => resolve({ approved, reason }),
-      });
-      channel.send(id, summary).catch(() => {});
+      // Only the first outcome counts: decision, timeout or failed delivery.
+      const settle = (approved, reason, auditFields) => {
+        if (!pending.delete(id)) return;
+        clearTimeout(timer);
+        audit({ id, action: summary, ...auditFields });
+        resolve({ approved, reason });
+      };
+      const timer = setTimeout(
+        () => settle(false, `timeout (${timeoutMs / 60000} min) — no response on Gjallarhorn`, { decision: 'timeout' }),
+        timeoutMs,
+      );
+      const undelivered = () =>
+        settle(false, 'approval request could not be delivered', { decision: 'denied', via: 'delivery failed' });
+      pending.set(id, settle);
+      channel.send(id, summary).then((messageId) => { if (messageId == null) undelivered(); }, undelivered);
     });
   };
 }

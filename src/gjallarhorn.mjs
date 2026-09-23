@@ -33,7 +33,9 @@ export async function sendApprovalRequest(id, summary) {
     ]],
   };
   const res = await tg('sendMessage', { chat_id: CHAT_ID, text, reply_markup });
-  return res && res.ok ? res.result.message_id : null;
+  if (res && res.ok) return res.result.message_id;
+  process.stderr.write(`[gjallarhorn] sendMessage failed: ${res && res.description}\n`);
+  return null;
 }
 
 // Long-poll getUpdates (callback_query only). Calls onDecision(id, approved) on each response.

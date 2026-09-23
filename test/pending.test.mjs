@@ -2,12 +2,12 @@ import { strict as assert } from 'node:assert';
 import { describe, it } from 'node:test';
 import { createApprovalQueue, describeAction } from '../src/pending.mjs';
 
-function setup({ configured = true, timeoutMs = 1000 } = {}) {
+function setup({ configured = true, timeoutMs = 1000, deliver = async () => 1 } = {}) {
   const channel = {
     sent: [],
     onDecision: null,
     configured: () => configured,
-    send: async (id, text) => { channel.sent.push({ id, text }); return 1; },
+    send: async (id, text) => { channel.sent.push({ id, text }); return deliver(); },
     startPolling: (onDecision) => { channel.onDecision = onDecision; },
   };
   const entries = [];
@@ -61,6 +61,21 @@ describe('approval queue', () => {
     assert.equal(result.approved, false);
     assert.match(result.reason, /too long/);
     assert.equal(channel.sent.length, 0);
+  });
+
+  it('denies at once when the channel reports no message', async () => {
+    const { entries, requestApproval } = setup({ deliver: async () => null });
+    const result = await requestApproval('node_exec [node-a] reboot');
+    assert.equal(result.approved, false);
+    assert.match(result.reason, /could not be delivered/);
+    assert.equal(entries.at(-1).via, 'delivery failed');
+  });
+
+  it('denies at once when sending fails', async () => {
+    const { requestApproval } = setup({ deliver: async () => { throw new Error('network unreachable'); } });
+    const result = await requestApproval('node_exec [node-a] reboot');
+    assert.equal(result.approved, false);
+    assert.match(result.reason, /could not be delivered/);
   });
 });
 
