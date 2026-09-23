@@ -11,8 +11,8 @@ import { TOOLS } from './src/tools.mjs';
 const server = new McpServer({ name: 'proxmox-ops-mcp', version: '1.0.0' });
 
 // Registering through the gate is the only path, so no tool can skip it.
-for (const { name, description, inputSchema, handler } of TOOLS) {
-  server.tool(name, description, inputSchema, gated(name, handler));
+for (const { name, title, description, inputSchema, annotations, handler } of TOOLS) {
+  server.registerTool(name, { title, description, inputSchema, annotations }, gated(name, handler));
 }
 
 // ─── Startup ──────────────────────────────────────────────────────────────────

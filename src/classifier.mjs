@@ -7,7 +7,7 @@
 // and cannot self-approve.
 
 // Tools that are inherently read-only -> always Tier 1.
-const READONLY_TOOLS = new Set([
+export const READONLY_TOOLS = new Set([
   'cluster_status', 'list_cts', 'node_resources', 'docker_ps', 'docker_logs', 'refresh_routing',
   'journalctl', 'prometheus_query',
 ]);

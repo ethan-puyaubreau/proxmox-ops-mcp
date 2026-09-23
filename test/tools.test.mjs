@@ -2,7 +2,7 @@ import { strict as assert } from 'node:assert';
 import fs from 'node:fs';
 import { describe, it } from 'node:test';
 import { TOOLS } from '../src/tools.mjs';
-import { classify } from '../src/classifier.mjs';
+import { classify, READONLY_TOOLS } from '../src/classifier.mjs';
 
 const names = TOOLS.map(t => t.name);
 
@@ -14,6 +14,12 @@ describe('tool table', () => {
   it('only lists tools the classifier recognizes', () => {
     for (const name of names) {
       assert.doesNotMatch(classify(name, {}).reason, /unrecognized tool/, name);
+    }
+  });
+
+  it('marks exactly the classifier read-only tools as read-only', () => {
+    for (const { name, annotations } of TOOLS) {
+      assert.equal(annotations.readOnlyHint, READONLY_TOOLS.has(name), name);
     }
   });
 
