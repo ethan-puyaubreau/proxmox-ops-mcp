@@ -79,4 +79,4 @@ Inventory files (node specs, service lists, network topology) used as MCP resour
 
 ## License
 
-MIT
+MIT. See LICENSE.

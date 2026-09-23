@@ -4,6 +4,12 @@
   "type": "module",
   "description": "MCP server for Proxmox cluster operations with two-tier command gating",
   "main": "index.mjs",
+  "license": "MIT",
+  "author": "Ethan Puyaubreau",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ethan-puyaubreau/proxmox-ops-mcp.git"
+  },
   "scripts": {
     "start": "node index.mjs",
     "test": "node --import ./test/setup.mjs --test \"test/*.test.mjs\""
