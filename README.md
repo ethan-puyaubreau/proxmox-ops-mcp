@@ -71,13 +71,13 @@ Configure in your MCP client:
 | `node_exec` | 1/2 | Shell command on a node, classified by command |
 | `ct_exec` | 1/2 | Shell command in a CT via pct exec, auto-resolves host node |
 | `node_resources` | 1 | Parsed RAM, disk, CPU, LVM thin pool usage per node |
-| `docker_ps` | 1 | Docker containers in a CT |
-| `docker_logs` | 1 | Docker container logs from a CT |
+| `docker_ps` | 1/2 | Docker containers in a CT |
+| `docker_logs` | 1/2 | Docker container logs from a CT |
 | `service_restart` | 1/2 | Restart a systemd service or Docker container, with post-restart check |
 | `standalone_exec` | 1/2 | Shell command on the configured standalone server |
 | `refresh_routing` | 1 | Force refresh of the CTID-to-node routing map |
 | `prometheus_query` | 1 | PromQL instant query, or range query with `start`, `end` and `step` |
-| `journalctl` | 1 | systemd journal logs from a node or CT |
+| `journalctl` | 1/2 | systemd journal logs from a node or CT |
 
 ## What is not included
 
