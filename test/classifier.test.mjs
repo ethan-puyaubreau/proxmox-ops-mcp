@@ -231,6 +231,7 @@ describe('classify — state changes through options', () => {
     for (const cmd of [
       'journalctl -u nginx -n 50', 'dmesg -T', 'date -u', 'date +%s', 'date -d 2026-01-01',
       'sort -n', 'ss -tlnp', 'arp -n', 'uniq -c', 'uniq -c in.txt', 'xxd somefile',
+      'xxd -l 64 somefile', 'xxd -s 0x10 somefile', 'uniq -f 1 input',
     ]) {
       assert.equal(classify('node_exec', { cmd }, opts).tier, 1, cmd);
     }

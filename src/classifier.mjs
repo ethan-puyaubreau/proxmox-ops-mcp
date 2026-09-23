@@ -75,8 +75,21 @@ const SAFE_ACTION = {
   },
 };
 
-// Verbs that write to a second operand, so they may take at most one.
-const SINGLE_OPERAND_VERBS = new Set(['uniq', 'xxd']);
+// Verbs that write to a second operand, so they may take at most one,
+// with the options whose value is not an operand.
+const SINGLE_OPERAND_VERBS = {
+  uniq: new Set(['-f','-s','-w']),
+  xxd: new Set(['-l','-s','-c','-g','-o','-n']),
+};
+
+function countOperands(words, valueOptions) {
+  let n = 0;
+  for (let i = 0; i < words.length; i++) {
+    if (valueOptions.has(words[i])) i++;
+    else if (!words[i].startsWith('-')) n++;
+  }
+  return n;
+}
 
 // Patterns that are always Tier 2 (destructive / reconfiguration / sensitive target),
 // even when the head verb looks safe.
@@ -186,7 +199,8 @@ export function classify(toolName, args = {}, { sensitiveCtids = new Set() } = {
     for (const words of segments(clean)) {
       const verb = (words[0] || '').replace(/^.*\//, '');
       if (!SAFE_READ.has(verb)) return { tier: 2, reason: `non-allow-listed verb: ${verb || '(empty)'}` };
-      if (SINGLE_OPERAND_VERBS.has(verb) && words.slice(1).filter(w => !w.startsWith('-')).length > 1) {
+      const valueOptions = SINGLE_OPERAND_VERBS[verb];
+      if (valueOptions && countOperands(words.slice(1), valueOptions) > 1) {
         return { tier: 2, reason: `${verb}: a second operand is an output file` };
       }
       const sub = SAFE_SUBCMD[verb];
