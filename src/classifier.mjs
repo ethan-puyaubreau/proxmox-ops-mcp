@@ -54,6 +54,12 @@ const SAFE_SUBCMD = {
   hostname: new Set(['-f','--fqdn','-s','--short','-d','--domain','-i','--ip-address','-I','--all-ip-addresses','-A','--all-fqdns','-a','--alias']),
 };
 
+// Options allowed before the subcommand; they take no value, so they cannot hide it.
+const LEADING_FLAGS = {
+  systemctl: new Set(['--no-pager','--full','-l','--all','-a','--plain','--no-legend']),
+  ip: new Set(['-4','-6','-br','-s','-d','-o']),
+};
+
 // Verbs whose actions are options, so their first argument is the subcommand.
 const OPTION_ACTION_VERBS = new Set(['dpkg']);
 
@@ -123,9 +129,12 @@ function badSubcommand(verb, allowed, rest) {
     const a = rest[0];
     return a === undefined || allowed.has(a) || allowed.has(a.replace(/^-+/, '')) ? undefined : a;
   }
-  const a = rest.find(w => !w.startsWith('-'));
-  if (a !== undefined) return allowed.has(a) ? undefined : a;
-  return rest.find(w => !allowed.has(w));
+  const i = rest.findIndex(w => !w.startsWith('-'));
+  if (i === -1) return rest.find(w => !allowed.has(w));
+  const flags = LEADING_FLAGS[verb] ?? new Set();
+  const opt = rest.slice(0, i).find(w => !flags.has(w));
+  if (opt !== undefined) return opt;
+  return allowed.has(rest[i]) ? undefined : rest[i];
 }
 
 // Split on ; | && || newline and return word lists per segment, stripping env/sudo prefixes.

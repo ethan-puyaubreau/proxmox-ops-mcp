@@ -172,6 +172,12 @@ describe('classify — subcommand position', () => {
     assert.equal(classify('node_exec', { cmd: 'ip -br a' }, opts).tier, 1);
   });
 
+  it('an option before the subcommand must be a known flag without a value', () => {
+    assert.equal(classify('node_exec', { cmd: 'systemctl -p status stop nginx' }, opts).tier, 2);
+    assert.equal(classify('ct_exec', { ctid: 101, cmd: 'docker -l info exec app id' }, opts).tier, 2);
+    assert.equal(classify('ct_exec', { ctid: 101, cmd: 'docker -l info network create lab' }, opts).tier, 2);
+  });
+
   it('dpkg actions are options and stay allowed', () => {
     assert.equal(classify('node_exec', { cmd: 'dpkg -L nginx' }, opts).tier, 1);
   });
