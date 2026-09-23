@@ -185,6 +185,12 @@ describe('classify — subcommand position', () => {
   it('a command made only of allow-listed options is tier 1', () => {
     assert.equal(classify('node_exec', { cmd: 'apt --version' }, opts).tier, 1);
   });
+
+  it('--version alone is tier 1 for every subcommand verb', () => {
+    for (const cmd of ['docker --version', 'bao --version', 'zfs --version', 'zpool --version']) {
+      assert.equal(classify('node_exec', { cmd }, opts).tier, 1, cmd);
+    }
+  });
 });
 
 describe('classify — *ctl helpers and hostname', () => {

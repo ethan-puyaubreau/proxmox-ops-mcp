@@ -144,7 +144,7 @@ function badSubcommand(verb, allowed, rest) {
     return a === undefined || allowed.has(a) || allowed.has(a.replace(/^-+/, '')) ? undefined : a;
   }
   const i = rest.findIndex(w => !w.startsWith('-'));
-  if (i === -1) return rest.find(w => !allowed.has(w));
+  if (i === -1) return rest.find(w => w !== '--version' && !allowed.has(w));
   const flags = LEADING_FLAGS[verb] ?? new Set();
   const opt = rest.slice(0, i).find(w => !flags.has(w));
   if (opt !== undefined) return opt;
