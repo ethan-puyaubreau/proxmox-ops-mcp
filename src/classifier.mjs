@@ -47,6 +47,11 @@ const SAFE_SUBCMD = {
   dpkg:   new Set(['-l','-L','-s','--list','--status','-S','--search','--get-selections','-p']),
   bao:    new Set(['status','version']),
   mount:  new Set([]),
+  hostnamectl: new Set(['status']),
+  timedatectl: new Set(['status','show','list-timezones','timesync-status','show-timesync']),
+  loginctl: new Set(['list-sessions','list-users','list-seats','show-session','show-user','show-seat','session-status','user-status','seat-status']),
+  // Only options: an operand would set the hostname.
+  hostname: new Set(['-f','--fqdn','-s','--short','-d','--domain','-i','--ip-address','-I','--all-ip-addresses','-A','--all-fqdns','-a','--alias']),
 };
 
 // Verbs whose actions are options, so their first argument is the subcommand.

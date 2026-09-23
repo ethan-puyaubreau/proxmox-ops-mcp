@@ -180,3 +180,25 @@ describe('classify — subcommand position', () => {
     assert.equal(classify('node_exec', { cmd: 'apt --version' }, opts).tier, 1);
   });
 });
+
+describe('classify — *ctl helpers and hostname', () => {
+  it('bare and read forms are tier 1', () => {
+    for (const cmd of [
+      'hostnamectl', 'hostnamectl status',
+      'timedatectl', 'timedatectl status', 'timedatectl show', 'timedatectl timesync-status',
+      'loginctl', 'loginctl list-sessions', 'loginctl user-status alice',
+      'hostname', 'hostname -f', 'hostname -I',
+    ]) {
+      assert.equal(classify('node_exec', { cmd }, opts).tier, 1, cmd);
+    }
+  });
+
+  it('setters are tier 2', () => {
+    for (const cmd of [
+      'hostnamectl set-hostname node-z', 'timedatectl set-ntp false',
+      'loginctl terminate-user alice', 'hostname node-z',
+    ]) {
+      assert.equal(classify('node_exec', { cmd }, opts).tier, 2, cmd);
+    }
+  });
+});
