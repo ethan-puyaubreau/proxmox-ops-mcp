@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - run: npm install
       - run: for f in index.mjs src/classifier.mjs src/pool.mjs src/parsers.mjs src/gjallarhorn.mjs src/pending.mjs src/routing.mjs src/tools/*.mjs; do node --check "$f"; done
       - run: npm test
