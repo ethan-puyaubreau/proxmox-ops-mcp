@@ -14,8 +14,8 @@ import { prometheusQueryTool } from './tools/prometheus_query.mjs';
 import { journalctlTool } from './tools/journalctl.mjs';
 
 // MCP tool annotations are hints for the client; the gate enforces the tiers.
-const READ_ONLY = { readOnlyHint: true, openWorldHint: false };
-const EXEC = { readOnlyHint: false, destructiveHint: true, openWorldHint: false };
+const READ_ONLY = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
+const EXEC = { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false };
 const RESTART = { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false };
 
 export const TOOLS = [

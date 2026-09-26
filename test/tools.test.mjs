@@ -23,6 +23,13 @@ describe('tool table', () => {
     }
   });
 
+  it('declares all four annotation hints on every tool', () => {
+    const hints = ['readOnlyHint', 'destructiveHint', 'idempotentHint', 'openWorldHint'];
+    for (const { name, annotations } of TOOLS) {
+      for (const hint of hints) assert.equal(typeof annotations[hint], 'boolean', `${name} ${hint}`);
+    }
+  });
+
   it('matches the README tools table', () => {
     const readme = fs.readFileSync(new URL('../README.md', import.meta.url), 'utf8');
     const documented = [...readme.matchAll(/^\| `(\w+)` \|/gm)].map(m => m[1]);
