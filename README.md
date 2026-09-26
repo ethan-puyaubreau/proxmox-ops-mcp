@@ -85,6 +85,10 @@ Configure in your MCP client:
 
 Inventory files (node specs, service lists, network topology) used as MCP resources in the original deployment. Those are environment-specific and are not part of this repository.
 
+## Privacy
+
+The server runs locally over stdio and sends nothing to the author. See [PRIVACY.md](PRIVACY.md) for what goes to your hosts, Prometheus and Telegram.
+
 ## License
 
 MIT. See LICENSE.
