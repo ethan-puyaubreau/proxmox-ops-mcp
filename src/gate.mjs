@@ -2,6 +2,18 @@ import { SENSITIVE_CTIDS } from './config.mjs';
 import { classify } from './classifier.mjs';
 import { requestApproval, audit, describeAction } from './pending.mjs';
 
+// Report a handler failure to the client as a tool error result, with the
+// failure message, instead of letting it surface as a protocol error.
+export function reported(handler) {
+  return async (args, extra) => {
+    try {
+      return await handler(args, extra);
+    } catch (err) {
+      return { isError: true, content: [{ type: 'text', text: `Error: ${err.message}` }] };
+    }
+  };
+}
+
 // Two-tier gate (Heimdall classifier + Gjallarhorn out-of-band approval).
 // Tier 1 (read/repair) executes immediately. Tier 2 (destructive/sensitive/unrecognized)
 // is queued and requires an explicit approval from a separate channel (Telegram).

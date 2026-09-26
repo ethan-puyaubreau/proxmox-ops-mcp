@@ -5,14 +5,14 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { warmPool } from './src/pool.mjs';
 import { buildCtMap } from './src/routing.mjs';
 import { PVE_NODES } from './src/config.mjs';
-import { gated } from './src/gate.mjs';
+import { gated, reported } from './src/gate.mjs';
 import { TOOLS } from './src/tools.mjs';
 
 const server = new McpServer({ name: 'proxmox-ops-mcp', version: '1.0.0' });
 
 // Registering through the gate is the only path, so no tool can skip it.
 for (const { name, title, description, inputSchema, annotations, handler } of TOOLS) {
-  server.registerTool(name, { title, description, inputSchema, annotations }, gated(name, handler));
+  server.registerTool(name, { title, description, inputSchema, annotations }, reported(gated(name, handler)));
 }
 
 // ─── Startup ──────────────────────────────────────────────────────────────────
