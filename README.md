@@ -1,5 +1,7 @@
 # proxmox-ops-mcp
 
+[![M8ven](https://m8ven.ai/badge/mcp/ethan-puyaubreau/proxmox-ops-mcp?variant=verified)](https://m8ven.ai/mcp/ethan-puyaubreau/proxmox-ops-mcp)
+
 An MCP server for operating a Proxmox cluster. Tools cover cluster status, container and VM management, service restarts, Docker operations, Prometheus queries, and journal log access. There is also an optional tool for a standalone server outside the cluster.
 
 ## Two-tier execution model
