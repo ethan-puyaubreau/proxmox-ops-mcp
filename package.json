@@ -6,6 +6,10 @@
   "main": "index.mjs",
   "license": "MIT",
   "author": "Ethan Puyaubreau",
+  "homepage": "https://github.com/ethan-puyaubreau/proxmox-ops-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/ethan-puyaubreau/proxmox-ops-mcp/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ethan-puyaubreau/proxmox-ops-mcp.git"
