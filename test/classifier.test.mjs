@@ -146,6 +146,15 @@ describe('classify — service_restart', () => {
   });
 });
 
+describe('classify — standalone_exec', () => {
+  it('follows the same command rules as node_exec', () => {
+    assert.equal(classify('standalone_exec', { cmd: 'df -h /' }, opts).tier, 1);
+    assert.equal(classify('standalone_exec', { cmd: 'systemctl status nginx' }, opts).tier, 1);
+    assert.equal(classify('standalone_exec', { cmd: 'rm -rf /tmp/foo' }, opts).tier, 2);
+    assert.equal(classify('standalone_exec', { cmd: 'systemctl restart nginx' }, opts).tier, 2);
+  });
+});
+
 describe('classify — deny-by-default', () => {
   it('unknown tools are tier 2', () => {
     assert.equal(classify('unknown_tool', {}, opts).tier, 2);
